@@ -13,6 +13,7 @@ class TodoListPage extends StatefulWidget {
 }
 
 class _TodoListPageState extends State<TodoListPage> {
+  bool isLoading = true;
   List items = [];
 
   //Get all the elements when the page charge
@@ -28,17 +29,43 @@ class _TodoListPageState extends State<TodoListPage> {
       appBar: AppBar(
         title: const Text('Todo List'),
       ),
-      //The ListView
-      body: ListView.builder(
-          itemCount: items.length,
-          itemBuilder: (context, index) {
-            final item = items[index] as Map;
-            return ListTile(
-              leading: CircleAvatar(child: Text('${index + 1}')),
-              title: Text(item['title']),
-              subtitle: Text(item['description']),
-            );
-          }),
+
+      body: Visibility(
+        visible: isLoading,
+        child: Center(child: CircularProgressIndicator()),
+        //RefreshIndicator
+        replacement: RefreshIndicator(
+          onRefresh: fetchTodo,
+          //The ListView
+          child: ListView.builder(
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final item = items[index] as Map;
+              final id = item['_id'];
+              return ListTile(
+                leading: CircleAvatar(child: Text('${index + 1}')),
+                title: Text(item['title']),
+                subtitle: Text(item['description']),
+                trailing: PopupMenuButton(onSelected: (value) {
+                  //if the value is edit open Edit Page
+                  if (value == 'edit') {
+                    navigateToEditPage(item);
+                  } else {
+                    //Remove the item
+                    deleteById(id);
+                  }
+                }, itemBuilder: (context) {
+                  //List of options
+                  return [
+                    const PopupMenuItem(child: Text('Editar'), value: 'edit'),
+                    const PopupMenuItem(child: Text('Borrar'), value: 'delete'),
+                  ];
+                }),
+              );
+            },
+          ),
+        ),
+      ),
 
       //Button for navigate to another page
       floatingActionButton: FloatingActionButton.extended(
@@ -48,12 +75,28 @@ class _TodoListPageState extends State<TodoListPage> {
     );
   }
 
+  //Method Navigate to another page , in this case for edit
+  Future<void> navigateToEditPage(Map item) async {
+    final route = MaterialPageRoute(
+      builder: (context) => AddTodoPage(todo: item),
+    );
+    await Navigator.push(context, route);
+    setState(() {
+      isLoading = true;
+    });
+    fetchTodo();
+  }
+
   //Method Navigate to another page
-  void navigateToAddPage() {
+  Future<void> navigateToAddPage() async {
     final route = MaterialPageRoute(
       builder: (context) => const AddTodoPage(),
     );
-    Navigator.push(context, route);
+    await Navigator.push(context, route);
+    setState(() {
+      isLoading = true;
+    });
+    fetchTodo();
   }
 
   //get the todoList
@@ -70,8 +113,38 @@ class _TodoListPageState extends State<TodoListPage> {
         //Add the result to the array items, or List
         items = result;
       });
-    } else {
-      //Show error
     }
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  //Function for delete by id
+  Future<void> deleteById(String id) async {
+    final url = 'https://api.nstack.in/v1/todos/$id';
+
+    final uri = Uri.parse(url);
+    final response = await http.delete(uri);
+
+    if (response.statusCode == 200) {
+      //Remove item succesfuly
+      //Search the elements and show
+      final filtered = items.where((element) => element['_id'] != id).toList();
+      setState(() {
+        items = filtered;
+      });
+    } else {
+      //Show error message
+      showErrorMessage('Error al borrar');
+    }
+  }
+
+  //The other method that shows the Error message
+  void showErrorMessage(String message) {
+    final snackBar = SnackBar(
+      content: Text(message, style: const TextStyle(color: Colors.white)),
+      backgroundColor: Colors.red,
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 }

@@ -7,7 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class AddTodoPage extends StatefulWidget {
-  const AddTodoPage({super.key});
+  //Modify the constructor
+  final Map? todo; //Accept null
+  const AddTodoPage({
+    super.key,
+    this.todo,
+  });
 
   @override
   State<AddTodoPage> createState() => _AddTodoPageState();
@@ -17,13 +22,32 @@ class _AddTodoPageState extends State<AddTodoPage> {
   TextEditingController titleController =
       TextEditingController(); //For get the title
   TextEditingController descriptionController = TextEditingController();
+  bool isEdit = false; //For default in false
+
+  //This is a function when the page starts
+  @override
+  void initState() {
+    super.initState();
+    final todo = widget.todo;
+    if (todo != null) {
+      isEdit = true;
+      final title = todo['title'];
+      final description = todo['description'];
+      titleController.text = title;
+      descriptionController.text = description;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       //The appbar (top)
       appBar: AppBar(
-        title: const Text('Add Todo'),
+        title: Text(
+          isEdit
+              ? 'Editar'
+              : 'Agregar', //Conditional for show the title depending if is edit or add
+        ),
       ),
 
       //The body of the page add_page
@@ -50,12 +74,56 @@ class _AddTodoPageState extends State<AddTodoPage> {
           const SizedBox(height: 20), //Create a space
           //Button (end)
           ElevatedButton(
-            onPressed: submitData, //Call the method for submit the data
-            child: const Text('Enviar'),
+            onPressed: isEdit
+                ? updateData
+                : submitData, //Call the method for submit the data
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                isEdit ? 'Actualizar' : 'Enviar',
+              ),
+            ),
           )
         ],
       ),
     );
+  }
+
+  //Function for update
+  Future<void> updateData() async {
+    final todo = widget.todo;
+
+    if (todo == null) {
+      print('You can not call update without todo data');
+      return;
+    }
+    final id = todo['_id'];
+    //First get the data from the form
+    final title = titleController.text;
+    final description = descriptionController.text;
+
+    //This is a Json that we can use to send to the server
+    final body = {
+      "title": title,
+      "description": description,
+      "is_completed": false
+    };
+    //Second submit data to the server
+    //The url
+    final url = "https://api.nstack.in/v1/todos/$id";
+
+    final uri = Uri.parse(url);
+    //The response    //Send the json, uri, and the headers
+    final response = await http.put(uri,
+        body: jsonEncode(body), headers: {'Content-Type': 'application/json'});
+
+    if (response.statusCode == 200) {
+      //Success
+      showSuccesMessage('Actualizado correctamente');
+    } else {
+      //Fail
+      showErrorMessage('Error al actualizar');
+    }
   }
 
   //Submit the data of the form
