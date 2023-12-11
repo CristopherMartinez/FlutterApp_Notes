@@ -3,7 +3,7 @@
 This is a CRUD using flutter and the Swagger UI
 
 ## API
-In this project I work with Swagger UI, that is a Free Backend API for Frontend Learners:
+In this project I worked with Swagger UI, that is a Free Backend API for Frontend Learners:
 https://api.nstack.in
 
 <img width="1534" alt="Captura de pantalla 2023-12-11 a la(s) 12 19 59 p m" src="https://github.com/CristopherMartinez/FlutterApp_Notes/assets/100528093/8010abd3-464d-4e59-9341-26024e6a447b">
