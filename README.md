@@ -1,6 +1,11 @@
 # flutterapp_notes
 
-A new Flutter project.
+This is a CRUD using flutter and the Swagger UI
+
+## API
+In this project I work with Swagger UI, that is a Free Backend API for Frontend Learners:
+https://api.nstack.in
+
 
 ## Getting Started
 
