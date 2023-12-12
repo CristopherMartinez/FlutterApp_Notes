@@ -1,9 +1,10 @@
-import 'dart:convert';
+//import 'dart:convert';
 
 import 'package:flutter/material.dart';
 //Import the page add_page.dart
 import 'package:flutterapp_notes/screens/add_page.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutterapp_notes/services/todo_service.dart';
+//import 'package:http/http.dart' as http;
 
 class TodoListPage extends StatefulWidget {
   const TodoListPage({super.key});
@@ -48,7 +49,7 @@ class _TodoListPageState extends State<TodoListPage> {
               //The ListView
               child: ListView.builder(
                 itemCount: items.length,
-                padding: EdgeInsets.all(8),
+                padding: const EdgeInsets.all(8),
                 itemBuilder: (context, index) {
                   final item = items[index] as Map;
                   final id = item['_id'];
@@ -114,18 +115,14 @@ class _TodoListPageState extends State<TodoListPage> {
 
   //get the todoList
   Future<void> fetchTodo() async {
-    const url = 'https://api.nstack.in/v1/todos?page=1&limit=10';
-
-    final uri = Uri.parse(url);
-    final response = await http.get(uri);
-
-    if (response.statusCode == 200) {
-      final json = jsonDecode(response.body) as Map;
-      final result = json['items'] as List;
+    final response = await TodoService.fetchTodos();
+    //if isnt null
+    if (response != null) {
       setState(() {
-        //Add the result to the array items, or List
-        items = result;
+        items = response;
       });
+    } else {
+      showErrorMessage('Algo salió mal');
     }
     setState(() {
       isLoading = false;
@@ -134,12 +131,10 @@ class _TodoListPageState extends State<TodoListPage> {
 
   //Function for delete by id
   Future<void> deleteById(String id) async {
-    final url = 'https://api.nstack.in/v1/todos/$id';
-
-    final uri = Uri.parse(url);
-    final response = await http.delete(uri);
-
-    if (response.statusCode == 200) {
+    //Call the function that´s in TodoService
+    final isSucces = await TodoService.deleteById(id);
+    //if the response is true, delete
+    if (isSucces) {
       //Remove item succesfuly
       //Search the elements and show
       final filtered = items.where((element) => element['_id'] != id).toList();
