@@ -35,36 +35,49 @@ class _TodoListPageState extends State<TodoListPage> {
         child: Center(child: CircularProgressIndicator()),
         //RefreshIndicator
         replacement: RefreshIndicator(
-          onRefresh: fetchTodo,
-          //The ListView
-          child: ListView.builder(
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              final item = items[index] as Map;
-              final id = item['_id'];
-              return ListTile(
-                leading: CircleAvatar(child: Text('${index + 1}')),
-                title: Text(item['title']),
-                subtitle: Text(item['description']),
-                trailing: PopupMenuButton(onSelected: (value) {
-                  //if the value is edit open Edit Page
-                  if (value == 'edit') {
-                    navigateToEditPage(item);
-                  } else {
-                    //Remove the item
-                    deleteById(id);
-                  }
-                }, itemBuilder: (context) {
-                  //List of options
-                  return [
-                    const PopupMenuItem(child: Text('Editar'), value: 'edit'),
-                    const PopupMenuItem(child: Text('Borrar'), value: 'delete'),
-                  ];
-                }),
-              );
-            },
-          ),
-        ),
+            onRefresh: fetchTodo,
+            child: Visibility(
+              visible: items
+                  .isNotEmpty, //if the items isnt empty, the listview is visible
+              replacement: Center(
+                child: Text(
+                  'No hay elementos',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+              ), //else show the message
+              //The ListView
+              child: ListView.builder(
+                itemCount: items.length,
+                padding: EdgeInsets.all(8),
+                itemBuilder: (context, index) {
+                  final item = items[index] as Map;
+                  final id = item['_id'];
+                  return Card(
+                      child: ListTile(
+                    leading: CircleAvatar(child: Text('${index + 1}')),
+                    title: Text(item['title']),
+                    subtitle: Text(item['description']),
+                    trailing: PopupMenuButton(onSelected: (value) {
+                      //if the value is edit open Edit Page
+                      if (value == 'edit') {
+                        navigateToEditPage(item);
+                      } else {
+                        //Remove the item
+                        deleteById(id);
+                      }
+                    }, itemBuilder: (context) {
+                      //List of options
+                      return [
+                        const PopupMenuItem(
+                            child: Text('Editar'), value: 'edit'),
+                        const PopupMenuItem(
+                            child: Text('Borrar'), value: 'delete'),
+                      ];
+                    }),
+                  ));
+                },
+              ),
+            )),
       ),
 
       //Button for navigate to another page
